@@ -7,6 +7,8 @@
 
 const express = require('express');
 const cors = require('cors');
+const { authRoutes } = require('./routes');
+const { sendError } = require('./utils');
 
 const app = express();
 
@@ -67,10 +69,16 @@ app.get('/', (req, res) => {
     success: true,
     message: 'Mini User Management System API',
     version: '1.0.0',
-    documentation: '/api/docs',
-    health: '/api/health',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      users: '/api/users',
+    },
   });
 });
+
+// API Routes
+app.use('/api/auth', authRoutes);
 
 // ======================
 // ERROR HANDLING
@@ -94,15 +102,41 @@ app.use((err, req, res, next) => {
 
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
+  const code = err.code || 'INTERNAL_ERROR';
 
-  res.status(statusCode).json({
-    success: false,
-    message: message,
-    error: {
-      code: err.code || 'INTERNAL_ERROR',
-      status: statusCode,
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
-    },
+  // Handle validation errors with details
+  if (err.errors && Array.isArray(err.errors)) {
+    return sendError(res, {
+      statusCode,
+      message,
+      code,
+      errors: err.errors,
+    });
+  }
+
+  // Handle database errors
+  if (err.code === '23505') {
+    return sendError(res, {
+      statusCode: 409,
+      message: 'Duplicate entry. Resource already exists.',
+      code: 'DUPLICATE_ENTRY',
+    });
+  }
+
+  if (err.code === '23503') {
+    return sendError(res, {
+      statusCode: 400,
+      message: 'Invalid reference. Related resource not found.',
+      code: 'INVALID_REFERENCE',
+    });
+  }
+
+  // Send error response
+  sendError(res, {
+    statusCode,
+    message,
+    code,
+    errors: process.env.NODE_ENV === 'development' ? err : null,
   });
 });
 
