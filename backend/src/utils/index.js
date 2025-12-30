@@ -37,6 +37,13 @@ const {
   isEmpty,
 } = require('./validators');
 
+const {
+  hashPassword,
+  comparePassword,
+  needsRehash,
+  generateRandomPassword,
+} = require('./password');
+
 module.exports = {
   // Error classes
   AppError,
@@ -68,4 +75,10 @@ module.exports = {
   sanitizeString,
   validatePagination,
   isEmpty,
+  
+  // Password utilities
+  hashPassword,
+  comparePassword,
+  needsRehash,
+  generateRandomPassword,
 };
