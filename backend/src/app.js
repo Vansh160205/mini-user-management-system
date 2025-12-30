@@ -7,7 +7,7 @@
 
 const express = require('express');
 const cors = require('cors');
-const { authRoutes } = require('./routes');
+const { authRoutes, userRoutes } = require('./routes');
 const { sendError } = require('./utils');
 
 const app = express();
@@ -79,6 +79,7 @@ app.get('/', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 // ======================
 // ERROR HANDLING
