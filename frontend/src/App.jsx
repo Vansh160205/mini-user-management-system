@@ -6,12 +6,15 @@
  */
 
 import { AuthProvider } from './context';
+import { ToastProvider } from './components/ui';
 import { AppRouter } from './routes';
 
 function App() {
   return (
     <AuthProvider>
-      <AppRouter />
+      <ToastProvider>
+        <AppRouter />
+      </ToastProvider>
     </AuthProvider>
   );
 }
