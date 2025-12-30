@@ -44,6 +44,17 @@ const {
   generateRandomPassword,
 } = require('./password');
 
+const {
+  generateToken,
+  verifyToken,
+  extractTokenFromHeader,
+  extractAndVerifyToken,
+  decodeToken,
+  generateRefreshToken,
+  isTokenExpired,
+  getTokenExpiration,
+} = require('./jwt');
+
 module.exports = {
   // Error classes
   AppError,
@@ -81,4 +92,14 @@ module.exports = {
   comparePassword,
   needsRehash,
   generateRandomPassword,
+  
+  // JWT utilities
+  generateToken,
+  verifyToken,
+  extractTokenFromHeader,
+  extractAndVerifyToken,
+  decodeToken,
+  generateRefreshToken,
+  isTokenExpired,
+  getTokenExpiration,
 };
