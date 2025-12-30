@@ -1,63 +1,81 @@
 /**
  * Server Entry Point
  *
- * Loads environment variables, connects to MongoDB,
- * and starts the Express server.
- * Application logic lives in src/app.js
+ * Starts the Express server after verifying database connectivity.
+ * Handles graceful shutdown for production environments (Render).
  */
 
 require('dotenv').config();
-
-const app = require('./src/app');
-const {connectDB} = require('./src/config/db');
+const http = require('http');
+const app = require('./src/app'); // adjust path if needed
+const {
+  testConnection,
+  closePool,
+} = require('./src/config/db');
 
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-let server;
+const server = http.createServer(app);
 
-// Start server only after DB connection
+/**
+ * Start Server
+ */
 const startServer = async () => {
   try {
-    await connectDB();
+    console.log('🔄 Checking PostgreSQL connection...');
 
-    server = app.listen(PORT, () => {
-      console.log(`
-╔═══════════════════════════════════════════════════════╗
-║       Mini User Management System - Backend API       ║
-╠═══════════════════════════════════════════════════════╣
-║  Status:      Running                                 ║
-║  Environment: ${NODE_ENV.padEnd(41)}║
-║  Port:        ${String(PORT).padEnd(41)}║
-║  Health:      http://localhost:${PORT}/api/health${' '.repeat(14)}║
-╚═══════════════════════════════════════════════════════╝
-      `);
+    const isDbConnected = await testConnection();
+    if (!isDbConnected) {
+      console.error('❌ Server startup aborted due to DB connection failure');
+      process.exit(1);
+    }
+
+    server.listen(PORT, () => {
+      console.log('----------------------------------------');
+      console.log(`🚀 Server running`);
+      console.log(`🌍 Environment : ${NODE_ENV}`);
+      console.log(`📡 Port        : ${PORT}`);
+      console.log('----------------------------------------');
     });
   } catch (error) {
-    console.error('❌ Server startup failed');
+    console.error('❌ Failed to start server:', error.message);
     process.exit(1);
   }
 };
 
 startServer();
 
-// ======================
-// GRACEFUL SHUTDOWN
-// ======================
+/**
+ * Graceful Shutdown
+ * Required for Render / Railway / Docker
+ */
+const shutdown = async (signal) => {
+  console.log(`\n🛑 Received ${signal}. Shutting down gracefully...`);
 
-const shutdown = (signal) => {
-  console.log(`${signal} received. Shutting down gracefully...`);
-  if (server) {
-    server.close(() => {
-      console.log('Server closed.');
-      process.exit(0);
-    });
-  } else {
+  server.close(async () => {
+    console.log('🔌 HTTP server closed');
+
+    await closePool();
+
+    console.log('✅ Shutdown complete');
     process.exit(0);
-  }
+  });
+
+  // Force shutdown if it hangs
+  setTimeout(() => {
+    console.error('❌ Forced shutdown');
+    process.exit(1);
+  }, 10000);
 };
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
-
-module.exports = server;
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+  process.exit(1);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('❌ Unhandled Rejection:', reason);
+  process.exit(1);
+});
