@@ -1,63 +1,47 @@
-/**
- * PostgreSQL Database Configuration
- * 
- * Creates a connection pool and exports connection utilities.
- */
-
 const { Pool } = require('pg');
+const dotenv = require('dotenv');
 
-// Pool configuration
+dotenv.config({
+  path: process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
+});
+
 const poolConfig = {
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production'
-    ? { rejectUnauthorized: false }
-    : false,
-  // Pool settings
-  max: 20,                    // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000,   // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 2000, // Return error after 2 seconds if no connection
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT, 10),
+  database: process.env.DB_NAME,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
 };
 
 const pool = new Pool(poolConfig);
 
-// Pool error handling
 pool.on('error', (err) => {
   console.error('Unexpected error on idle client:', err);
   process.exit(-1);
 });
 
-/**
- * Connect to PostgreSQL database
- * Tests the connection and exits if it fails
- */
 const connectDB = async () => {
   try {
     const client = await pool.connect();
-    
-    // Get database info
     const result = await client.query('SELECT current_database(), current_user');
-    const { current_database, current_user } = result.rows[0];
-    
-    console.log(`✅ PostgreSQL connected`);
-    console.log(`   Database: ${current_database}`);
-    console.log(`   User: ${current_user}`);
-    
+    console.log(`✅ PostgreSQL connected: ${result.rows[0].current_database} as ${result.rows[0].current_user}`);
     client.release();
-  } catch (error) {
-    console.error('❌ PostgreSQL connection failed:', error.message);
+  } catch (err) {
+    console.error('❌ PostgreSQL connection failed:', err.message);
     process.exit(1);
   }
 };
 
-/**
- * Close all pool connections
- */
 const closeDB = async () => {
   try {
     await pool.end();
     console.log('🔌 PostgreSQL pool closed');
-  } catch (error) {
-    console.error('Error closing pool:', error.message);
+  } catch (err) {
+    console.error('Error closing pool:', err.message);
   }
 };
 
