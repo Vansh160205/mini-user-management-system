@@ -7,6 +7,9 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "db:init": "node src/database/init.js",
+    "db:seed": "node src/database/seed.js",
+    "db:reset": "node src/database/seed.js --reset",
+    "db:setup": "npm run db:init && npm run db:seed",
     "test": "jest --coverage --detectOpenHandles",
     "test:watch": "jest --watch"
   },
