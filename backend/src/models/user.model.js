@@ -5,7 +5,7 @@
  * Uses repository pattern for clean data access.
  */
 
-const { query, transaction } = require('../database');
+const { query, transaction } = require('../config/db');
 
 /**
  * User Model - Database Operations
