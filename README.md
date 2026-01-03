@@ -6,7 +6,9 @@ A full-stack web application for managing user accounts with secure authenticati
 ![React](https://img.shields.io/badge/React-18.x-blue)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15.x-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
+---
 
+Demo video : [demo video](https://drive.google.com/file/d/1D2oLdd48VwzyuH27Y_Mb_tCNwvXqyf1R/view?usp=drive_link)
 ---
 
 ## 📋 Table of Contents
